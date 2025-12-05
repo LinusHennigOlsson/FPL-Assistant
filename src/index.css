@@ -1,0 +1,195 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@layer base {
+  :root {
+    /* Dark sports theme */
+    --background: 220 20% 8%;
+    --foreground: 210 20% 95%;
+
+    --card: 220 18% 12%;
+    --card-foreground: 210 20% 95%;
+
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 20% 95%;
+
+    /* Teal/emerald primary - football pitch inspired */
+    --primary: 166 76% 47%;
+    --primary-foreground: 220 20% 8%;
+
+    /* Darker teal for secondary */
+    --secondary: 220 16% 18%;
+    --secondary-foreground: 210 20% 95%;
+
+    --muted: 220 14% 20%;
+    --muted-foreground: 215 15% 55%;
+
+    /* Gold accent for points */
+    --accent: 45 93% 58%;
+    --accent-foreground: 220 20% 8%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 166 76% 47%;
+
+    --radius: 0.75rem;
+
+    /* Custom colors */
+    --pitch-green: 145 63% 42%;
+    --pitch-dark: 145 50% 25%;
+    --gold: 45 93% 58%;
+    --gold-glow: 45 93% 68%;
+    --danger: 0 72% 51%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+
+    /* Fixture difficulty */
+    --fdr-1: 142 71% 45%;
+    --fdr-2: 84 85% 45%;
+    --fdr-3: 45 93% 50%;
+    --fdr-4: 25 95% 53%;
+    --fdr-5: 0 72% 51%;
+
+    --sidebar-background: 220 18% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 166 76% 47%;
+    --sidebar-primary-foreground: 220 20% 8%;
+    --sidebar-accent: 220 16% 18%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 166 76% 47%;
+  }
+
+  .dark {
+    --background: 220 20% 8%;
+    --foreground: 210 20% 95%;
+    --card: 220 18% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 220 18% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 166 76% 47%;
+    --primary-foreground: 220 20% 8%;
+    --secondary: 220 16% 18%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 220 14% 20%;
+    --muted-foreground: 215 15% 55%;
+    --accent: 45 93% 58%;
+    --accent-foreground: 220 20% 8%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 14% 20%;
+    --input: 220 14% 20%;
+    --ring: 166 76% 47%;
+    --sidebar-background: 220 18% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 166 76% 47%;
+    --sidebar-primary-foreground: 220 20% 8%;
+    --sidebar-accent: 220 16% 18%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 220 14% 20%;
+    --sidebar-ring: 166 76% 47%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-card/80 backdrop-blur-xl border border-border/50 shadow-xl;
+  }
+
+  .gradient-primary {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--pitch-green)) 100%);
+  }
+
+  .gradient-gold {
+    background: linear-gradient(135deg, hsl(var(--gold)) 0%, hsl(var(--gold-glow)) 100%);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glow-primary {
+    box-shadow: 0 0 30px -5px hsl(var(--primary) / 0.4);
+  }
+
+  .glow-gold {
+    box-shadow: 0 0 30px -5px hsl(var(--gold) / 0.4);
+  }
+
+  /* FDR colors */
+  .fdr-1 { @apply bg-[hsl(var(--fdr-1))] text-white; }
+  .fdr-2 { @apply bg-[hsl(var(--fdr-2))] text-white; }
+  .fdr-3 { @apply bg-[hsl(var(--fdr-3))] text-black; }
+  .fdr-4 { @apply bg-[hsl(var(--fdr-4))] text-white; }
+  .fdr-5 { @apply bg-[hsl(var(--fdr-5))] text-white; }
+
+  .pitch-pattern {
+    background-image: 
+      linear-gradient(90deg, hsl(var(--pitch-green) / 0.1) 1px, transparent 1px),
+      linear-gradient(hsl(var(--pitch-green) / 0.1) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s ease-in-out infinite;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { 
+    box-shadow: 0 0 20px -5px hsl(var(--primary) / 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 40px -5px hsl(var(--primary) / 0.6);
+  }
+}
