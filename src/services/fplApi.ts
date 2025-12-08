@@ -135,9 +135,17 @@ class FPLApiService {
     );
   }
 
+  // NEW: get basic info about an entry (team name + manager name)
+  async getEntrySummary(entryId: number): Promise<any> {
+    return this.fetchWithCache(
+      `${FPL_BASE_URL}/entry/${entryId}/`
+    );
+  }
+
   clearCache(): void {
     this.cache.clear();
   }
 }
+
 
 export const fplApi = new FPLApiService();

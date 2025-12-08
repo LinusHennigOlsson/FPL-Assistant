@@ -17,8 +17,8 @@ function calculateExpectedPoints5GW(
 ): number {
   const playerTeamId = player.team;
 
-  // Upcoming fixtures in the next 5 gameweeks
-  const upcomingFixtures = fixtures
+  // Upcoming fixtures for this team in the next 5 GWs
+  const nextFixtures = fixtures
     .filter(f => f.event !== null && f.event > currentGW && f.event <= currentGW + 5)
     .filter(f => f.team_h === playerTeamId || f.team_a === playerTeamId)
     .slice(0, 5);
@@ -30,54 +30,39 @@ function calculateExpectedPoints5GW(
   const totalPoints = player.total_points || 0;
 
   const gamesPlayed = minutes > 0 ? minutes / 90 : 0;
-  const rawPointsPer90 = gamesPlayed > 0 ? totalPoints / gamesPlayed : 0;
+  const pointsPerGame = gamesPlayed > 0 ? totalPoints / gamesPlayed : 0;
 
-  // --- 1) Regularise points per 90 so tiny samples don't explode ---
-  const leagueAvgPointsPer90 = 4;      // rough average FPL pts/90
-  const regMinutes = 900;              // ~10 full games worth of "trust"
-
-  const regPointsPer90 =
-    (rawPointsPer90 * minutes + leagueAvgPointsPer90 * regMinutes) /
-    (minutes + regMinutes || 1);
-
-  // --- 2) Baseline EP per game: mix FPL model + season performance ---
-  let baseEP: number;
-
-  if (epNext > 0) {
-    // Normal case: trust FPL but anchor to season
-    baseEP = 0.6 * epNext + 0.4 * regPointsPer90;
-  } else if (regPointsPer90 > 0 || form > 0) {
-    // No ep_next – use season + form
-    baseEP = 0.8 * regPointsPer90 + 0.2 * form;
-  } else {
-    return 0;
+  // --- 1) Base EP per game ---
+  // Prefer FPL ep_next, fall back to season performance / form
+  let baseEP = epNext;
+  if (baseEP === 0) {
+    if (pointsPerGame > 0) {
+      baseEP = pointsPerGame;
+    } else {
+      baseEP = form;
+    }
   }
 
-  // --- 3) Minutes / nailedness: favour regular starters, punish rotation ---
-  const sampleFactor = Math.max(0, Math.min(1, minutes / 900)); // 0 → no mins, 1 → 10+ full games
+  if (baseEP <= 0) return 0;
 
-  const maxPossibleMinutes = Math.max(currentGW, 1) * 90;
-  const nailednessRaw =
-    maxPossibleMinutes > 0 ? minutes / maxPossibleMinutes : 0;
-  const nailedness = Math.max(0, Math.min(1, nailednessRaw));
+  // --- 2) Minutes factor: punish tiny samples, reward regulars ---
+  // 0.3 → very low minutes, 1 → ~10 full games or more
+  const sampleFactor = Math.max(0.3, Math.min(1, minutes / 900));
 
-  // Strong boost for nailed 90-min players, big nerf on bench fodder
-  let availabilityFactor = 0.2 + 0.5 * sampleFactor + 0.3 * nailedness;
-  availabilityFactor = Math.max(0.2, Math.min(1, availabilityFactor));
-
-  // --- 4) Injury / suspension chance ---
+  // --- 3) Availability: injury / suspension chance ---
   const playProb =
     player.chance_of_playing_next_round != null
       ? player.chance_of_playing_next_round / 100
       : 1;
 
-  const effectiveBase = baseEP * availabilityFactor * playProb;
+  const effectiveBase = baseEP * sampleFactor * playProb;
 
-  if (effectiveBase === 0) {
-    return 0;
+  // If no fixtures, just project flat
+  if (nextFixtures.length === 0) {
+    return Number((effectiveBase * 5).toFixed(1));
   }
 
-  // --- 5) Fixture difficulty + home/away ---
+  // --- 4) Fixture difficulty + home/away ---
   const difficultyWeights: Record<number, number> = {
     1: 1.3,
     2: 1.15,
@@ -89,31 +74,26 @@ function calculateExpectedPoints5GW(
   const homeBonus = 1.05;
   const awayPenalty = 0.95;
 
-  if (upcomingFixtures.length === 0) {
-    const projected = effectiveBase * 5;
-    return Math.round(projected * 10) / 10;
-  }
+  let total = 0;
 
-  let totalExpected = 0;
-
-  upcomingFixtures.forEach(fixture => {
+  nextFixtures.forEach(fixture => {
     const isHome = fixture.team_h === playerTeamId;
     const difficulty = isHome ? fixture.team_a_difficulty : fixture.team_h_difficulty;
     const diffFactor = difficultyWeights[difficulty as 1 | 2 | 3 | 4 | 5] ?? 1;
     const venueFactor = isHome ? homeBonus : awayPenalty;
 
-    totalExpected += effectiveBase * diffFactor * venueFactor;
+    total += effectiveBase * diffFactor * venueFactor;
   });
 
-  // If fewer than 5 fixtures (e.g. blanks), assume rest look like the average
-  const used = upcomingFixtures.length;
-  if (used > 0 && used < 5) {
-    const avgPerGW = totalExpected / used;
-    totalExpected += avgPerGW * (5 - used);
+  // If <5 fixtures (e.g. blanks), assume the rest look like the average
+  if (nextFixtures.length < 5) {
+    const avg = total / nextFixtures.length;
+    total += avg * (5 - nextFixtures.length);
   }
 
-  return Math.round(totalExpected * 10) / 10;
+  return Number(total.toFixed(1));
 }
+
 
 
 

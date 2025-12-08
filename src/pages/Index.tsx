@@ -7,13 +7,14 @@ import { FixturesOverview } from "@/components/FixturesOverview";
 import { ExpectedPointsTable } from "@/components/ExpectedPointsTable";
 import { GameweekInfo } from "@/components/GameweekInfo";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ArrowLeftRight, Calendar, Star, Loader2 } from "lucide-react";
+import { Users, ArrowLeftRight, Calendar, Star, Loader2, Trophy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useFPL } from "@/contexts/FPLContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fplApi } from "@/services/fplApi";
+import { TeamRating } from "@/components/TeamRating";
 
 const Index = () => {
   const [squad, setSquad] = useState<Player[]>([]);
@@ -24,6 +25,8 @@ const Index = () => {
     teamValue: number;
     transfersMade: number;
     estimatedFreeTransfers: number;
+    managerName: string;
+    teamName: string;
   } | null>(null);
 
   const { toast } = useToast();
@@ -56,6 +59,9 @@ const Index = () => {
     try {
       setLoadingEntry(true);
 
+      // Get basic info about your team (name + manager)
+      const summary = await (fplApi as any).getEntrySummary(entryIdNum);
+
       // Fetch picks for current gameweek
       const picks = await fplApi.getEntryPicks(entryIdNum, currentGameweek);
 
@@ -78,16 +84,21 @@ const Index = () => {
       const transfersMade = hist.event_transfers ?? 0;
       const estimatedFreeTransfers = transfersMade === 0 ? 2 : 1; // rough guess
 
+      const managerName = `${summary.player_first_name} ${summary.player_last_name}`;
+      const teamName = summary.name;
+
       setEntryInfo({
         bank: bankMillions,
         teamValue: valueMillions,
         transfersMade,
         estimatedFreeTransfers,
+        managerName,
+        teamName,
       });
 
       toast({
         title: "Team loaded",
-        description: `Imported ${newSquad.length} players. Bank £${bankMillions.toFixed(
+        description: `Loaded ${teamName} (${managerName}). Imported ${newSquad.length} players. Bank £${bankMillions.toFixed(
           1
         )}m, est. free transfers: ${estimatedFreeTransfers}.`,
       });
@@ -152,19 +163,25 @@ const Index = () => {
                   can find it in the URL when you view your team on the FPL site.
                 </p>
                 {entryInfo && (
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    Bank: <span className="font-medium">£{entryInfo.bank.toFixed(1)}m</span> •{" "}
-                    Team value:{" "}
-                    <span className="font-medium">
-                      £{entryInfo.teamValue.toFixed(1)}m
-                    </span>{" "}
-                    • Transfers made this GW:{" "}
-                    <span className="font-medium">{entryInfo.transfersMade}</span> • Est. free
-                    transfers:{" "}
-                    <span className="font-medium">
-                      {entryInfo.estimatedFreeTransfers}
-                    </span>
-                  </p>
+                  <>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Bank: <span className="font-medium">£{entryInfo.bank.toFixed(1)}m</span> •{" "}
+                      Team value:{" "}
+                      <span className="font-medium">
+                        £{entryInfo.teamValue.toFixed(1)}m
+                      </span>{" "}
+                      • Transfers made this GW:{" "}
+                      <span className="font-medium">{entryInfo.transfersMade}</span> • Est. free
+                      transfers:{" "}
+                      <span className="font-medium">
+                        {entryInfo.estimatedFreeTransfers}
+                      </span>
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Team: <span className="font-medium">{entryInfo.teamName}</span> • Manager:{" "}
+                      <span className="font-medium">{entryInfo.managerName}</span>
+                    </p>
+                  </>
                 )}
               </div>
 
@@ -203,7 +220,7 @@ const Index = () => {
             </div>
 
             <Tabs defaultValue="squad" className="space-y-6">
-              <TabsList className="glass-card p-1 w-full max-w-2xl mx-auto grid grid-cols-4">
+              <TabsList className="glass-card p-1 w-full max-w-2xl mx-auto grid grid-cols-5">
                 <TabsTrigger
                   value="squad"
                   className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
@@ -232,6 +249,13 @@ const Index = () => {
                   <Star className="w-4 h-4" />
                   <span className="hidden sm:inline">xPoints</span>
                 </TabsTrigger>
+                <TabsTrigger
+                  value="rating"
+                  className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                >
+                  <Trophy className="w-4 h-4" />
+                  <span className="hidden sm:inline">Dream Team</span>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="squad" className="animate-slide-up">
@@ -244,7 +268,6 @@ const Index = () => {
                     squad={squad}
                     onTransfer={handleTransfer}
                     allPlayers={players}
-                    initialBank={entryInfo?.bank}
                   />
                   <ExpectedPointsTable squad={squad} />
                 </div>
@@ -256,6 +279,10 @@ const Index = () => {
 
               <TabsContent value="points" className="animate-slide-up">
                 <ExpectedPointsTable squad={squad} />
+              </TabsContent>
+
+              <TabsContent value="rating" className="animate-slide-up">
+                <TeamRating squad={squad} allPlayers={players} />
               </TabsContent>
             </Tabs>
           </>
