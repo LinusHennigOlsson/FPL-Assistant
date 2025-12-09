@@ -24,4 +24,12 @@ dist-ssr
 *.sw?
 .venv/
 venv/
+ml_data/models/
+*.joblib
+
+# Lokala ML-filer
+ml_data/
+.venv/
+venv/
+*.joblib
 
