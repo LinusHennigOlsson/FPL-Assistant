@@ -24,12 +24,13 @@ dist-ssr
 *.sw?
 .venv/
 venv/
+# ML stuff
+
+# ignore model binaries
 ml_data/models/
 *.joblib
 
-# Lokala ML-filer
-ml_data/
+# ignore local virtual envs
 .venv/
 venv/
-*.joblib
 
