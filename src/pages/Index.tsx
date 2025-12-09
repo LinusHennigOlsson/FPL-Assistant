@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Player } from "@/data/mockPlayers";
 import { Header } from "@/components/Header";
 import { SquadBuilder } from "@/components/SquadBuilder";
@@ -15,6 +15,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fplApi } from "@/services/fplApi";
 import { TeamRating } from "@/components/TeamRating";
+import { ModelSettings } from "@/components/ModelSettings";
+
 
 const Index = () => {
   const [squad, setSquad] = useState<Player[]>([]);
@@ -31,6 +33,14 @@ const Index = () => {
 
   const { toast } = useToast();
   const { players, currentGameweek, isLoading, error } = useFPL();
+
+    // Always re-sync squad players with the latest global player data
+  const resolvedSquad = useMemo(
+    () =>
+      squad.map((p) => players.find((pl) => pl.id === p.id) ?? p),
+    [squad, players]
+  );
+
 
   const handleTransfer = (outPlayer: Player, inPlayer: Player) => {
     setSquad((prev) => {
@@ -219,6 +229,11 @@ const Index = () => {
               </div>
             </div>
 
+            {/* Model / prediction settings */}
+            <div className="mb-6">
+              <ModelSettings />
+            </div>
+
             <Tabs defaultValue="squad" className="space-y-6">
               <TabsList className="glass-card p-1 w-full max-w-2xl mx-auto grid grid-cols-5">
                 <TabsTrigger
@@ -259,30 +274,30 @@ const Index = () => {
               </TabsList>
 
               <TabsContent value="squad" className="animate-slide-up">
-                <SquadBuilder squad={squad} setSquad={setSquad} allPlayers={players} />
+                <SquadBuilder squad={resolvedSquad} setSquad={setSquad} allPlayers={players} />
               </TabsContent>
 
               <TabsContent value="transfers" className="animate-slide-up">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <TransferRecommendations
-                    squad={squad}
+                    squad={resolvedSquad}
                     onTransfer={handleTransfer}
                     allPlayers={players}
                   />
-                  <ExpectedPointsTable squad={squad} />
+                  <ExpectedPointsTable squad={resolvedSquad} />
                 </div>
               </TabsContent>
 
               <TabsContent value="fixtures" className="animate-slide-up">
-                <FixturesOverview squad={squad} />
+                <FixturesOverview squad={resolvedSquad} />
               </TabsContent>
 
               <TabsContent value="points" className="animate-slide-up">
-                <ExpectedPointsTable squad={squad} />
+                <ExpectedPointsTable squad={resolvedSquad} />
               </TabsContent>
 
               <TabsContent value="rating" className="animate-slide-up">
-                <TeamRating squad={squad} allPlayers={players} />
+                <TeamRating squad={resolvedSquad} allPlayers={players} />
               </TabsContent>
             </Tabs>
           </>
