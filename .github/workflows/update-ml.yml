@@ -4,7 +4,7 @@ on:
   schedule:
     # Run at 06:00 UTC every Monday (1) and Thursday (4)
     - cron: "0 6 * * 1,4"
-  workflow_dispatch: # allows manual trigger from Actions tab
+  workflow_dispatch:  # allows manual trigger
 
 permissions:
   contents: write
@@ -17,7 +17,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_PUSH }}  # uses the secret you just created
+          token: ${{ secrets.PAT_PUSH }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -37,12 +37,17 @@ jobs:
           python -m ml.predict_points_from_features
           python -m ml.export_predictions_json
 
-
       - name: Commit updated prediction file
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Only commit if the predictions file actually changed
-          if git status --porcelain | grep "public/ml_predictions_24_25.json"; then
-            git
+          # Add the predictions file (even if unchanged)
+          git add public/ml_predictions_24_25.json || echo "No predictions file found"
+
+          # Commit if there are changes
+          git commit -m "Update ML predictions [skip ci]" || echo "No changes to commit"
+
+          # Push safely
+          git push origin main || echo "No changes pushed"
+
