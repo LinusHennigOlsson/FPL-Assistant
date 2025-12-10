@@ -10,7 +10,9 @@ export interface MlPredictionRecord {
 export type MlPredictionMap = Record<string, MlPredictionRecord>;
 
 async function fetchMlPredictions(): Promise<MlPredictionMap> {
-  const res = await fetch("/ml_predictions_24_25.json", {
+  const baseUrl = import.meta.env.BASE_URL || "/";
+
+  const res = await fetch(`${baseUrl}ml_predictions_24_25.json`, {
     cache: "no-store",
   });
 
