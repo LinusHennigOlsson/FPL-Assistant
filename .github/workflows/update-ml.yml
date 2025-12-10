@@ -31,11 +31,12 @@ jobs:
 
       - name: Run ML pipeline
         run: |
-          python ml/download_2024_25.py
-          python ml/build_features.py
-          python ml/train_rf_model.py
-          python ml/predict_points_from_features.py
-          python ml/export_predictions_json.py
+          python -m ml.download_2024_25
+          python -m ml.build_features
+          python -m ml.train_rf_model
+          python -m ml.predict_points_from_features
+          python -m ml.export_predictions_json
+
 
       - name: Commit updated prediction file
         run: |
