@@ -1,0 +1,47 @@
+name: Update ML Predictions
+
+on:
+  schedule:
+    # Run at 06:00 UTC every Monday (1) and Thursday (4)
+    - cron: "0 6 * * 1,4"
+  workflow_dispatch: # allows manual trigger from Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update-ml:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_PUSH }}  # uses the secret you just created
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ml/requirements_ml.txt
+
+      - name: Run ML pipeline
+        run: |
+          python ml/download_2024_25.py
+          python ml/build_features.py
+          python ml/train_rf_model.py
+          python ml/predict_points_from_features.py
+          python ml/export_predictions_json.py
+
+      - name: Commit updated prediction file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Only commit if the predictions file actually changed
+          if git status --porcelain | grep "public/ml_predictions_24_25.json"; then
+            git
